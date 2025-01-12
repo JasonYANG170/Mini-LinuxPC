@@ -1,5 +1,6 @@
-![luckfox](https://github.com/LuckfoxTECH/luckfox-pico/assets/144299491/cec5c4a5-22b9-4a9a-abb1-704b11651e88)
-# Luckfox Pico SDK
+![9d579de9adf6494ca1fa79fdc0e8502f](https://github.com/user-attachments/assets/3d9ad004-8669-4f8e-b8e0-88f6c8669710)
+# Mini-LinuxPC SDK
+
 [中文版](./README_CN.md)
 * This SDK is modified based on the SDK provided by Rockchip
 * It provides a customized SDK specifically for Luckfox Pico series development boards 
