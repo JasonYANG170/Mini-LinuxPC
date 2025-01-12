@@ -1,5 +1,5 @@
-![luckfox](https://github.com/LuckfoxTECH/luckfox-pico/assets/144299491/cec5c4a5-22b9-4a9a-abb1-704b11651e88)
-# Luckfox Pico SDK
+![9d579de9adf6494ca1fa79fdc0e8502f](https://github.com/user-attachments/assets/3d9ad004-8669-4f8e-b8e0-88f6c8669710)
+# Mini-LinuxPC SDK
 [English Version](./README.md)
 * 本SDK基于RK官方提供的SDK修改而来
 * 专为Luckfox Pico系列开发板提供客制化的SDK
