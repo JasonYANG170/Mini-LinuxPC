@@ -3,20 +3,43 @@ name: Build Mini-LinuxPC
 on:
   push:
     branches: [ v1.0, main ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ v1.0, main ]
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - kernel
+          - uboot
+          - rootfs
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 480
     
     steps:
+    - name: Maximize build space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        df -h
+    
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        fetch-depth: 0
+        fetch-depth: 1
     
     - name: Set up build environment
       run: |
@@ -37,37 +60,93 @@ jobs:
           python3-pip \
           cpio \
           rsync \
-          unzip
+          unzip \
+          gawk \
+          mtd-utils \
+          liblz4-tool \
+          libgmp-dev \
+          libmpc-dev \
+          libmpfr-dev \
+          texinfo \
+          dosfstools \
+          mtools \
+          zip \
+          p7zip-full
     
     - name: Configure git
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
     
+    - name: Cache build output
+      uses: actions/cache@v4
+      with:
+        path: |
+          output
+          sysdrv/source/buildroot/buildroot-*/dl
+        key: ${{ runner.os }}-build-${{ hashFiles('**/BoardConfig*.mk') }}
+        restore-keys: |
+          ${{ runner.os }}-build-
+    
     - name: Build with lunch option 001
       run: |
         chmod +x build.sh
-        ./build.sh lunch <<EOF
-        001
-        EOF
+        # Hardware: 0 (RV1103_Luckfox_Pico)
+        # Boot Medium: 0 (SD_CARD)
+        # System: 1 (Ubuntu)
+        echo -e "0\n0\n1" | ./build.sh lunch
+        
+    - name: Build all
+      if: github.event.inputs.build_type == 'all' || github.event.inputs.build_type == ''
+      run: |
+        sudo ./build.sh all
+    
+    - name: Build kernel only
+      if: github.event.inputs.build_type == 'kernel'
+      run: |
+        ./build.sh kernel
+    
+    - name: Build uboot only
+      if: github.event.inputs.build_type == 'uboot'
+      run: |
+        ./build.sh uboot
+    
+    - name: Build rootfs only
+      if: github.event.inputs.build_type == 'rootfs'
+      run: |
+        sudo ./build.sh rootfs
+    
+    - name: Prepare artifacts
+      if: success()
+      run: |
+        mkdir -p artifacts
+        if [ -d "output/image" ]; then
+          cp -r output/image/* artifacts/ || true
+        fi
+        if [ -d "IMAGE" ]; then
+          find IMAGE -name "*.img" -o -name "*.bin" -o -name "build_info.txt" | \
+            xargs -I {} cp --parents {} artifacts/ || true
+        fi
+        ls -lah artifacts/
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       if: success()
       with:
-        name: mini-linuxpc-images
-        path: |
-          IMAGE/**/*.img
-          IMAGE/**/*.bin
-          IMAGE/**/build_info.txt
+        name: mini-linuxpc-images-${{ github.sha }}
+        path: artifacts/
         retention-days: 30
+        if-no-files-found: warn
     
     - name: Create release on tag
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          IMAGE/**/*.img
-          IMAGE/**/*.bin
+          artifacts/**/*.img
+          artifacts/**/*.bin
+          artifacts/**/build_info.txt
+        draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
