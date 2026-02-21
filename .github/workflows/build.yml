@@ -85,11 +85,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          output
           sysdrv/source/buildroot/buildroot-*/dl
-        key: ${{ runner.os }}-build-${{ github.sha }}
+        key: ${{ runner.os }}-build-dl-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-build-
+          ${{ runner.os }}-build-dl-
     
     - name: Build with lunch option 001
       run: |
