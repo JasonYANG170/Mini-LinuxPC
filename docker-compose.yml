@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mini-linuxpc-builder:latest
+    container_name: mini-linuxpc-builder
+    volumes:
+      - .:/workspace
+      - build-cache:/workspace/output
+      - dl-cache:/workspace/sysdrv/source/buildroot/buildroot-2023.02.6/dl
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    environment:
+      - RK_JOBS=${RK_JOBS:-4}
+    command: /bin/bash
+
+volumes:
+  build-cache:
+    driver: local
+  dl-cache:
+    driver: local

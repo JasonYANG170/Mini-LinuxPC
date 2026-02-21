@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+.gitmodules
+
+# Build outputs
+output/
+IMAGE/
+*.img
+*.bin
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
