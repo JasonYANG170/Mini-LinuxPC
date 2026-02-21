@@ -84,7 +84,7 @@ jobs:
         path: |
           output
           sysdrv/source/buildroot/buildroot-*/dl
-        key: ${{ runner.os }}-build-${{ hashFiles('**/BoardConfig*.mk') }}
+        key: ${{ runner.os }}-build-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-build-
     
@@ -128,25 +128,103 @@ jobs:
             xargs -I {} cp --parents {} artifacts/ || true
         fi
         ls -lah artifacts/
+        
+    - name: Create release package
+      if: success()
+      run: |
+        cd artifacts
+        DATE=$(date +%Y%m%d_%H%M)
+        zip -r ../Mini-LinuxPC-RV1103-Ubuntu-${DATE}.zip .
+        cd ..
+        ls -lh Mini-LinuxPC-*.zip
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       if: success()
       with:
         name: mini-linuxpc-images-${{ github.sha }}
-        path: artifacts/
+        path: |
+          artifacts/
+          Mini-LinuxPC-*.zip
         retention-days: 30
         if-no-files-found: warn
+    
+    - name: Upload release package
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: Mini-LinuxPC-Release-Package
+        path: Mini-LinuxPC-*.zip
+        retention-days: 90
+        if-no-files-found: warn
+    
+    - name: Create or update latest release
+      if: success() && github.ref == 'refs/heads/v1.0'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: latest
+        name: Latest Build (Auto-generated)
+        files: |
+          Mini-LinuxPC-*.zip
+          artifacts/*.img
+          artifacts/update.img
+        draft: false
+        prerelease: true
+        body: |
+          ## Mini-LinuxPC Latest Build
+          
+          **⚠️ This is an automated build from the latest commit**
+          
+          ### Build Information
+          - Commit: ${{ github.sha }}
+          - Branch: ${{ github.ref_name }}
+          - Build Date: ${{ github.event.head_commit.timestamp }}
+          
+          ### Hardware Configuration
+          - Board: RV1103_Luckfox_Pico
+          - Boot Medium: SD_CARD
+          - System: Ubuntu
+          
+          ### Files
+          - `Mini-LinuxPC-*.zip`: Complete image package (recommended)
+          - `update.img`: Firmware update image
+          
+          ### Flash Instructions
+          1. Download the zip package or update.img
+          2. Use SD card or USB to flash the device
+          
+          For detailed instructions, see the README.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Create release on tag
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/**/*.img
-          artifacts/**/*.bin
+          Mini-LinuxPC-*.zip
+          artifacts/*.img
+          artifacts/*.bin
           artifacts/**/build_info.txt
         draft: false
         prerelease: false
+        body: |
+          ## Mini-LinuxPC Release
+          
+          ### Hardware Configuration
+          - Board: RV1103_Luckfox_Pico
+          - Boot Medium: SD_CARD
+          - System: Ubuntu
+          
+          ### Files
+          - `Mini-LinuxPC-*.zip`: Complete image package (recommended)
+          - Individual image files for advanced users
+          
+          ### Flash Instructions
+          1. Download the zip package
+          2. Extract the files
+          3. Use `update.img` to flash via USB or SD card
+          
+          For detailed instructions, see the README.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
