@@ -1,0 +1,73 @@
+name: Build Mini-LinuxPC
+
+on:
+  push:
+    branches: [ v1.0, main ]
+  pull_request:
+    branches: [ v1.0, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          wget \
+          curl \
+          bc \
+          bison \
+          flex \
+          libssl-dev \
+          libncurses-dev \
+          device-tree-compiler \
+          u-boot-tools \
+          python3 \
+          python3-pip \
+          cpio \
+          rsync \
+          unzip
+    
+    - name: Configure git
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+    
+    - name: Build with lunch option 001
+      run: |
+        chmod +x build.sh
+        ./build.sh lunch <<EOF
+        001
+        EOF
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: mini-linuxpc-images
+        path: |
+          IMAGE/**/*.img
+          IMAGE/**/*.bin
+          IMAGE/**/build_info.txt
+        retention-days: 30
+    
+    - name: Create release on tag
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          IMAGE/**/*.img
+          IMAGE/**/*.bin
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
