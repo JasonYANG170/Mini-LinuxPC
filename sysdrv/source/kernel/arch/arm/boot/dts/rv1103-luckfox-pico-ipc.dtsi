@@ -6,7 +6,7 @@
 
 / {
 	chosen {
-		bootargs = "earlycon=uart8250,mmio32,0xff4c0000 console=ttyFIQ0 root=/dev/mmcblk1p7 rootwait snd_soc_core.prealloc_buffer_size_kbytes=16 coherent_pool=0";
+		bootargs = "earlycon=uart8250,mmio32,0xff4c0000 console=tty0 console=ttyFIQ0 root=/dev/mmcblk1p7 rootwait snd_soc_core.prealloc_buffer_size_kbytes=16 coherent_pool=0";
 	};
 
 	acodec_sound: acodec-sound {
@@ -311,27 +311,42 @@
 
 /***************************** PINCTRL ********************************/
 // SPI
+
 &spi0 {
 	pinctrl-0 = <&spi0m0_clk &spi0m0_miso &spi0m0_mosi &spi0m0_cs0>;
+	status = "okay";
 	#address-cells = <1>;
 	#size-cells = <0>;
-
-  spidev@0 {
-    compatible = "rockchip,spidev";
+	
+	spidev@0 {
+		compatible = "rockchip,spidev";
 		spi-max-frequency = <50000000>;
 		reg = <0>;
+		status = "disabled";  /* 禁用spidev，使用ST7789 */
 	};
-  fbtft@0{
-      compatible = "sitronix,st7789v";
-      reg = <0>;
-      spi-max-frequency = <20000000>;
-      fps = <30>;
-      buswidth = <8>;
-      debug = <0x7>;
-      led-gpios = <&gpio0 RK_PA4 GPIO_ACTIVE_LOW>;//BL
-      dc = <&gpio1 RK_PA2 GPIO_ACTIVE_HIGH>;      //DC
-      reset = <&gpio1 RK_PC3 GPIO_ACTIVE_LOW>;    //RES
-  };
+ 
+	st7789v@0 {
+		status = "okay";
+		compatible = "sitronix,st7789v";  
+		reg = <0>;					
+		spi-max-frequency = <48000000>;
+		spi-cpol;
+		spi-cpha;
+		
+		/* 屏幕参数 */
+		width = <240>;
+		height = <320>;
+		rotate = <90>;
+		fps = <30>;
+		bgr;
+		buswidth = <8>;
+		
+		/* fbtft驱动使用的GPIO属性名（不带-gpios后缀） */
+		reset = <&gpio1 RK_PD1 GPIO_ACTIVE_LOW>;
+		dc = <&gpio1 RK_PD0 GPIO_ACTIVE_HIGH>;
+		
+		debug = <7>;  /* 启用详细调试信息 */
+	};
 };
 // I2C
 &i2c3 {
