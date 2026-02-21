@@ -160,6 +160,18 @@ jobs:
         retention-days: 90
         if-no-files-found: warn
     
+    - name: Delete old release assets
+      if: success() && github.ref == 'refs/heads/v1.0'
+      continue-on-error: true
+      run: |
+        # 获取 latest release 的所有资产并删除旧的 zip 文件
+        gh release view latest --json assets --jq '.assets[].name' | grep "Mini-LinuxPC.*\.zip" | while read asset; do
+          echo "Deleting old asset: $asset"
+          gh release delete-asset latest "$asset" --yes || true
+        done
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
     - name: Create or update latest release
       if: success() && github.ref == 'refs/heads/v1.0'
       uses: softprops/action-gh-release@v1
