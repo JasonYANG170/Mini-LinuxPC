@@ -169,8 +169,14 @@ jobs:
         name: Latest Build (Auto-generated)
         files: |
           Mini-LinuxPC-*.zip
-          artifacts/*.img
+          artifacts/boot.img
+          artifacts/env.img
+          artifacts/idblock.img
+          artifacts/oem.img
+          artifacts/rootfs.img
+          artifacts/uboot.img
           artifacts/update.img
+          artifacts/userdata.img
         draft: false
         prerelease: true
         body: |
@@ -190,11 +196,13 @@ jobs:
           
           ### Files
           - `Mini-LinuxPC-*.zip`: Complete image package (recommended)
-          - `update.img`: Firmware update image
+          - `update.img`: Firmware update image (for USB/SD card flashing)
+          - Individual partition images for advanced users
           
           ### Flash Instructions
-          1. Download the zip package or update.img
-          2. Use SD card or USB to flash the device
+          1. Download `Mini-LinuxPC-*.zip` or `update.img`
+          2. Extract the zip (if downloaded zip)
+          3. Use SD card or USB to flash the device
           
           For detailed instructions, see the README.md
       env:
