@@ -6,3 +6,8 @@ IMAGE/
 output/
 project/app/wifi_app/wpa_supplicant.conf
 config/
+
+# Private deployment credentials
+.env
+.env.local
+wifi_credentials.local.h
