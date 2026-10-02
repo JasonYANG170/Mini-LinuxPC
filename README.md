@@ -4,7 +4,7 @@
 # Luckfox Pico SDK
 * This SDK is modified based on the SDK provided by Rockchip
 * It provides a customized SDK specifically for Luckfox Pico series development boards 
-* Aimed at providing developers with a better programming experience
+* Provides developers with a better programming experience
 ## SDK Updatelog
 * Current version V1.3
 1. Added support for Luckfox-pico-Ultra and Luckfox-pico-Ultra-W
